@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { Anchor, Button, Flex, List, SimpleGrid, Stack } from "@mantine/core";

@@ -1,9 +1,9 @@
+"use client";
+
 import React, { useEffect, useRef } from "react";
 import { Box, Container, Flex, Paper, Text, Title } from "@mantine/core";
 import { Editor } from "@monaco-editor/react";
-import { NextSeo } from "next-seo";
 import { LuCheck, LuCircleX } from "react-icons/lu";
-import { SEO } from "../../constants/seo";
 import { type FileFormat, formats } from "../../enums/file.enum";
 import { contentToJson, jsonToContent } from "../../lib/utils/jsonAdapter";
 import Layout from "../PageLayout";
@@ -51,12 +51,6 @@ export const ToolPage = ({ from, to }: ToolPageProps) => {
 
   return (
     <Layout>
-      <NextSeo
-        {...SEO}
-        title={`${fromLabel} to ${toLabel} | JSON Crack`}
-        canonical={`https://jsoncrack.com/converter/${from}-to-${to}`}
-        description={`Convert ${fromLabel} to ${toLabel} using this free online tool. Upload your ${fromLabel} file and get the converted ${fromLabel} file instantly.`}
-      />
       <Container mt="xl" size="lg">
         <Title c="black">
           {fromLabel} to {toLabel} Converter

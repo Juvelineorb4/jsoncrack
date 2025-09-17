@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Container, Title, Accordion } from "@mantine/core";
 import Questions from "../../data/faq.json";
