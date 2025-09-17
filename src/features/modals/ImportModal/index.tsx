@@ -5,7 +5,7 @@ import { Dropzone } from "@mantine/dropzone";
 import { event as gaEvent } from "nextjs-google-analytics";
 import toast from "react-hot-toast";
 import { AiOutlineUpload } from "react-icons/ai";
-import type { FileFormat } from "../../../enums/file.enum";
+import { FileFormat } from "../../../enums/file.enum";
 import useFile from "../../../store/useFile";
 
 export const ImportModal = ({ opened, onClose }: ModalProps) => {
@@ -13,9 +13,8 @@ export const ImportModal = ({ opened, onClose }: ModalProps) => {
   const [file, setFile] = React.useState<File | null>(null);
 
   const setContents = useFile(state => state.setContents);
-  const setFormat = useFile(state => state.setFormat);
 
-  const handleImportFile = () => {
+  const handleImportFile = async () => {
     if (url) {
       setFile(null);
 
@@ -25,24 +24,24 @@ export const ImportModal = ({ opened, onClose }: ModalProps) => {
       return fetch(url)
         .then(res => res.json())
         .then(json => {
-          setContents({ contents: JSON.stringify(json, null, 2) });
+          setContents({ contents: JSON.stringify(json, null, 2), format: FileFormat.JSON });
           onClose();
         })
         .catch(() => toast.error("Failed to fetch JSON!"))
         .finally(() => toast.dismiss("toastFetch"));
     } else if (file) {
-      const lastIndex = file.name.lastIndexOf(".");
-      const format = file.name.substring(lastIndex + 1);
-      setFormat(format as FileFormat);
+      if (!file.name.toLowerCase().endsWith(".json")) {
+        toast.error("Solo se pueden importar archivos .json.");
+        return;
+      }
 
-      file.text().then(text => {
-        setContents({ contents: text });
-        setFile(null);
-        setURL("");
-        onClose();
-      });
+      const text = await file.text();
+      await setContents({ contents: text, format: FileFormat.JSON });
+      setFile(null);
+      setURL("");
+      onClose();
 
-      gaEvent("import_file", { label: format });
+      gaEvent("import_file", { label: FileFormat.JSON });
     }
   };
 
@@ -71,13 +70,7 @@ export const ImportModal = ({ opened, onClose }: ModalProps) => {
             onReject={files => toast.error(`Unable to load file ${files[0].file.name}`)}
             maxFiles={1}
             p="md"
-            accept={[
-              "application/json",
-              "application/x-yaml",
-              "text/csv",
-              "application/xml",
-              "application/toml",
-            ]}
+            accept={{ "application/json": [".json"] }}
           >
             <Stack justify="center" align="center" gap="sm" mih={220}>
               <AiOutlineUpload size={48} />

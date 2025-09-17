@@ -26,6 +26,7 @@ interface JsonActions {
   getFormat: () => FileFormat;
   getHasChanges: () => boolean;
   setError: (error: string | null) => void;
+  clearError: () => void;
   setHasChanges: (hasChanges: boolean) => void;
   setContents: (data: SetContents) => void;
   fetchUrl: (url: string) => void;
@@ -52,7 +53,7 @@ const initialStates = {
   fileData: null as File | null,
   format: FileFormat.JSON,
   contents: defaultJson,
-  error: null as any,
+  error: null as string | null,
   hasChanges: false,
   jsonSchema: null as object | null,
 };
@@ -73,9 +74,10 @@ const debouncedUpdateJson = debounce((value: unknown) => {
 const useFile = create<FileStates & JsonActions>()((set, get) => ({
   ...initialStates,
   clear: () => {
-    set({ contents: "" });
+    set({ contents: "", error: null });
     useJson.getState().clear();
   },
+  clearError: () => set({ error: null }),
   setJsonSchema: jsonSchema => set({ jsonSchema }),
   setFile: fileData => {
     set({ fileData, format: fileData.format || FileFormat.JSON });
@@ -101,28 +103,42 @@ const useFile = create<FileStates & JsonActions>()((set, get) => ({
   },
   setContents: async ({ contents, hasChanges = true, skipUpdate = false, format }) => {
     try {
+      const nextFormat = format ?? get().format;
+      const nextContents = contents ?? get().contents;
+
+      const json = await contentToJson(nextContents, nextFormat);
+
       set({
-        ...(contents && { contents }),
+        ...(contents !== undefined && { contents: nextContents }),
         error: null,
         hasChanges,
-        format: format ?? get().format,
+        format: nextFormat,
       });
-
-      const isFetchURL = window.location.href.includes("?");
-      const json = await contentToJson(get().contents, get().format);
 
       if (!useConfig.getState().liveTransformEnabled && skipUpdate) return;
 
-      if (get().hasChanges && contents && contents.length < 80_000 && !isIframe() && !isFetchURL) {
-        sessionStorage.setItem("content", contents);
-        sessionStorage.setItem("format", get().format);
+      const isFetchURL = window.location.href.includes("?");
+
+      if (
+        hasChanges &&
+        contents !== undefined &&
+        contents.length < 80_000 &&
+        !isIframe() &&
+        !isFetchURL
+      ) {
+        sessionStorage.setItem("content", nextContents);
+        sessionStorage.setItem("format", nextFormat);
         set({ hasChanges: true });
       }
 
       debouncedUpdateJson(json);
     } catch (error: any) {
-      if (error?.mark?.snippet) return set({ error: error.mark.snippet });
-      if (error?.message) set({ error: error.message });
+      if (error?.mark?.snippet) {
+        set({ error: error.mark.snippet });
+      } else {
+        const message = typeof error === "string" ? error : error?.message;
+        set({ error: message ?? "Failed to parse content" });
+      }
       useJson.setState({ loading: false });
       useGraph.setState({ loading: false });
     }
@@ -135,8 +151,11 @@ const useFile = create<FileStates & JsonActions>()((set, get) => ({
       const json = await res.json();
       const jsonStr = JSON.stringify(json, null, 2);
 
-      get().setContents({ contents: jsonStr });
-      return useJson.setState({ json: jsonStr, loading: false });
+      await get().setContents({ contents: jsonStr });
+      if (!get().error) {
+        return useJson.setState({ json: jsonStr, loading: false });
+      }
+      useJson.setState({ loading: false });
     } catch (error) {
       get().clear();
       toast.error("Failed to fetch document from URL!");

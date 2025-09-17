@@ -1,43 +1,44 @@
 {
-  "fruits": [
+  "hazard": "Chemical spill during storage",
+  "element": "Bulk solvent tank",
+  "threat_actions": [
     {
-      "name": "Apple",
-      "color": "#FF0000",
-      "details": {
-        "type": "Pome",
-        "season": "Fall"
-      },
-      "nutrients": {
-        "calories": 52,
-        "fiber": "2.4g",
-        "vitaminC": "4.6mg"
-      }
+      "name": "Overfilling",
+      "actors": "Operations team",
+      "IEF": "Manual transfer continues after high level alarm",
+      "controls": [
+        { "name": "Independent high-level alarm", "status": "operational" },
+        { "name": "Automatic inlet shutoff valve", "status": "operational" }
+      ]
     },
     {
-      "name": "Banana",
-      "color": "#FFFF00",
-      "details": {
-        "type": "Berry",
-        "season": "Year-round"
-      },
-      "nutrients": {
-        "calories": 89,
-        "fiber": "2.6g",
-        "potassium": "358mg"
-      }
+      "name": "Corrosion",
+      "actors": "Chemical exposure",
+      "IEF": "External corrosion reduces wall thickness",
+      "controls": [
+        { "name": "Protective coating inspections", "status": "scheduled" },
+        { "name": "Cathodic protection", "status": "operational" }
+      ]
+    }
+  ],
+  "consequences": [
+    {
+      "name": "Release to environment",
+      "severity": "Major",
+      "failure_mode": "Loss of containment",
+      "safeguards": [
+        { "name": "Secondary containment berm", "status": "operational" },
+        { "name": "Emergency spill response team", "status": "trained" }
+      ]
     },
     {
-      "name": "Orange",
-      "color": "#FFA500",
-      "details": {
-        "type": "Citrus",
-        "season": "Winter"
-      },
-      "nutrients": {
-        "calories": 47,
-        "fiber": "2.4g",
-        "vitaminC": "53.2mg"
-      }
+      "name": "Fire escalation",
+      "severity": "Severe",
+      "failure_mode": "Vapor cloud ignition",
+      "safeguards": [
+        { "name": "Fixed foam suppression system", "status": "operational" },
+        { "name": "Emergency shutdown procedures", "status": "documented" }
+      ]
     }
   ]
 }

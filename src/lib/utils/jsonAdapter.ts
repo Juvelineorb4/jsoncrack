@@ -1,49 +1,30 @@
 import type { ParseError } from "jsonc-parser";
 import { FileFormat } from "../../enums/file.enum";
+import { validateBowtieJson } from "./validateBowtie";
 
 export const contentToJson = (value: string, format = FileFormat.JSON): Promise<object> => {
   return new Promise(async (resolve, reject) => {
     try {
       if (!value) return resolve({});
 
-      if (format === FileFormat.JSON) {
-        const { parse } = await import("jsonc-parser");
-        const errors: ParseError[] = [];
-        const result = parse(value, errors);
-        if (errors.length > 0) JSON.parse(value);
-        return resolve(result);
+      if (format !== FileFormat.JSON) {
+        throw new Error("Solo se admiten archivos Bowtie en formato JSON.");
       }
 
-      if (format === FileFormat.YAML) {
-        const { load } = await import("js-yaml");
-        return resolve(load(value) as object);
+      const { parse } = await import("jsonc-parser");
+      const errors: ParseError[] = [];
+      const result = parse(value, errors);
+
+      if (errors.length > 0) {
+        JSON.parse(value);
       }
 
-      if (format === FileFormat.XML) {
-        const { XMLParser } = await import("fast-xml-parser");
-        const parser = new XMLParser({
-          attributeNamePrefix: "$",
-          ignoreAttributes: false,
-          allowBooleanAttributes: true,
-          parseAttributeValue: true,
-          trimValues: true,
-          parseTagValue: true,
-        });
-        return resolve(parser.parse(value));
+      const validationErrors = validateBowtieJson(result);
+      if (validationErrors.length > 0) {
+        throw new Error(validationErrors.join("\n"));
       }
 
-      if (format === FileFormat.CSV) {
-        const { csv2json } = await import("json-2-csv");
-        const result = csv2json(value, {
-          trimFieldValues: true,
-          trimHeaderFields: true,
-          wrapBooleans: true,
-          excelBOM: true,
-        });
-        return resolve(result);
-      }
-
-      return resolve({});
+      return resolve(result);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to parse content";
       return reject(errorMessage);
