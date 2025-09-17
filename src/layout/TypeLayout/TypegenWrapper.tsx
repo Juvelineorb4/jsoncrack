@@ -1,9 +1,9 @@
+"use client";
+
 import React, { useEffect, useRef } from "react";
 import { Box, Container, Flex, Paper, Title, Text } from "@mantine/core";
 import { Editor } from "@monaco-editor/react";
-import { NextSeo } from "next-seo";
 import { LuCheck, LuCircleX } from "react-icons/lu";
-import { SEO } from "../../constants/seo";
 import { type FileFormat, formats, type TypeLanguage, typeOptions } from "../../enums/file.enum";
 import { editorOptions } from "../../layout/ConverterLayout/options";
 import Layout from "../../layout/PageLayout";
@@ -41,12 +41,6 @@ export const TypegenWrapper = ({ from, to }: ConverterPagesProps) => {
 
   return (
     <Layout>
-      <NextSeo
-        {...SEO}
-        title={`${fromLabel} to ${toLabel} | JSON Crack`}
-        canonical={`https://jsoncrack.com/converter/${from}-to-${to}`}
-        description={`Instantly generate ${toLabel} from ${fromLabel} using this free online tool. Paste your ${fromLabel} and get the generated ${toLabel} instantly.`}
-      />
       <Container mt="xl" size="lg">
         <Title c="black">
           {fromLabel} to {toLabel} Converter

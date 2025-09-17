@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Button, Container, Flex, Text } from "@mantine/core";
 import styled from "styled-components";
