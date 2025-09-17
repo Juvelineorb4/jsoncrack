@@ -15,7 +15,7 @@ import { NotSupported } from "./NotSupported";
 import { OptionsMenu } from "./OptionsMenu";
 import { SecureInfo } from "./SecureInfo";
 import { ZoomControl } from "./ZoomControl";
-import useGraph from "./stores/useGraph";
+import useGraph, { DEFAULT_LAYOUT_OPTIONS } from "./stores/useGraph";
 
 const StyledEditorWrapper = styled.div<{ $widget: boolean; $showRulers: boolean }>`
   position: absolute;
@@ -72,11 +72,6 @@ const StyledEditorWrapper = styled.div<{ $widget: boolean; $showRulers: boolean 
   }
 `;
 
-const layoutOptions = {
-  "elk.layered.compaction.postCompaction.strategy": "EDGE_LENGTH",
-  "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
-};
-
 interface GraphProps {
   isWidget?: boolean;
 }
@@ -87,6 +82,7 @@ const GraphCanvas = ({ isWidget }: GraphProps) => {
   const direction = useGraph(state => state.direction);
   const nodes = useGraph(state => state.nodes);
   const edges = useGraph(state => state.edges);
+  const layoutOptions = useGraph(state => state.layoutOptions) ?? DEFAULT_LAYOUT_OPTIONS;
   const colorScheme = useComputedColorScheme();
   const [paneWidth, setPaneWidth] = React.useState(2000);
   const [paneHeight, setPaneHeight] = React.useState(2000);

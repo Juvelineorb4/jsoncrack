@@ -1,10 +1,17 @@
 import type { ViewPort } from "react-zoomable-ui/dist/ViewPort";
+import type { ElkCanvasLayoutOptions } from "reaflow";
 import type { CanvasDirection } from "reaflow/dist/layout/elkLayout";
 import { create } from "zustand";
 import { SUPPORTED_LIMIT } from "../../../../../constants/graph";
 import useJson from "../../../../../store/useJson";
 import type { EdgeData, NodeData } from "../../../../../types/graph";
+import { applyHazardLayout } from "../lib/applyHazardLayout";
 import { parser } from "../lib/jsonParser";
+
+export const DEFAULT_LAYOUT_OPTIONS: ElkCanvasLayoutOptions = {
+  "elk.layered.compaction.postCompaction.strategy": "EDGE_LENGTH",
+  "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
+};
 
 export interface Graph {
   viewPort: ViewPort | null;
@@ -16,6 +23,7 @@ export interface Graph {
   selectedNode: NodeData | null;
   path: string;
   aboveSupportedLimit: boolean;
+  layoutOptions: ElkCanvasLayoutOptions;
 }
 
 const initialStates: Graph = {
@@ -28,6 +36,7 @@ const initialStates: Graph = {
   selectedNode: null,
   path: "",
   aboveSupportedLimit: false,
+  layoutOptions: DEFAULT_LAYOUT_OPTIONS,
 };
 
 interface GraphActions {
@@ -47,23 +56,31 @@ interface GraphActions {
 
 const useGraph = create<Graph & GraphActions>((set, get) => ({
   ...initialStates,
-  clearGraph: () => set({ nodes: [], edges: [], loading: false }),
+  clearGraph: () =>
+    set({ nodes: [], edges: [], loading: false, layoutOptions: DEFAULT_LAYOUT_OPTIONS }),
   setSelectedNode: nodeData => set({ selectedNode: nodeData }),
   setGraph: (data, options) => {
-    const { nodes, edges } = parser(data ?? useJson.getState().json);
+    const { nodes: parsedNodes, edges: parsedEdges } = parser(data ?? useJson.getState().json);
+    const {
+      nodes: transformedNodes,
+      edges: transformedEdges,
+      layoutOptions: transformedLayoutOptions,
+    } = applyHazardLayout(parsedNodes, parsedEdges);
 
-    if (nodes.length > SUPPORTED_LIMIT) {
+    if (transformedNodes.length > SUPPORTED_LIMIT) {
       return set({
         aboveSupportedLimit: true,
+        layoutOptions: DEFAULT_LAYOUT_OPTIONS,
         ...options,
         loading: false,
       });
     }
 
     set({
-      nodes,
-      edges,
+      nodes: transformedNodes,
+      edges: transformedEdges,
       aboveSupportedLimit: false,
+      layoutOptions: transformedLayoutOptions ?? DEFAULT_LAYOUT_OPTIONS,
       ...options,
     });
   },
