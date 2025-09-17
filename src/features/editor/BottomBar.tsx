@@ -1,5 +1,5 @@
 import React from "react";
-import { Flex, Menu, Popover, Text } from "@mantine/core";
+import { Flex, Menu, Text } from "@mantine/core";
 import styled from "styled-components";
 import { event as gaEvent } from "nextjs-google-analytics";
 import { BiSolidDockLeft } from "react-icons/bi";
@@ -9,6 +9,7 @@ import { VscCheck, VscError, VscRunAll, VscSync, VscSyncIgnored } from "react-ic
 import { formats } from "../../enums/file.enum";
 import useConfig from "../../store/useConfig";
 import useFile from "../../store/useFile";
+import { useModal } from "../../store/useModal";
 import useGraph from "./views/GraphView/stores/useGraph";
 
 const StyledBottomBar = styled.div`
@@ -84,6 +85,7 @@ export const BottomBar = () => {
   const fullscreen = useGraph(state => state.fullscreen);
   const setFormat = useFile(state => state.setFormat);
   const currentFormat = useFile(state => state.format);
+  const setVisible = useModal(state => state.setVisible);
 
   const toggleEditor = () => {
     toggleFullscreen(!fullscreen);
@@ -94,6 +96,12 @@ export const BottomBar = () => {
     if (data?.name) window.document.title = `${data.name} | JSON Crack`;
   }, [data]);
 
+  React.useEffect(() => {
+    if (typeof error === "string" && error.trim().length > 0) {
+      setVisible("BowtieErrorModal", true);
+    }
+  }, [error, setVisible]);
+
   return (
     <StyledBottomBar>
       <StyledLeft>
@@ -102,19 +110,12 @@ export const BottomBar = () => {
         </StyledBottomBarItem>
         <StyledBottomBarItem>
           {error ? (
-            <Popover width="auto" shadow="md" position="top" withArrow>
-              <Popover.Target>
-                <Flex align="center" gap={2}>
-                  <VscError color="red" />
-                  <Text c="red" fw={500} fz="xs">
-                    Invalid
-                  </Text>
-                </Flex>
-              </Popover.Target>
-              <Popover.Dropdown style={{ pointerEvents: "none" }}>
-                <Text size="xs">{error}</Text>
-              </Popover.Dropdown>
-            </Popover>
+            <Flex align="center" gap={2}>
+              <VscError color="red" />
+              <Text c="red" fw={500} fz="xs">
+                Invalid
+              </Text>
+            </Flex>
           ) : (
             <Flex align="center" gap={2}>
               <VscCheck />
